@@ -1,8 +1,6 @@
 name: Release
 
-# Runs on the GitHub mirror when the mirror workflow pushes a vX.Y.Z tag.
-# Builds the per-browser bundles and creates a GitHub release with the
-# Chrome .zip and Firefox .xpi attached, plus the latest changelog entry.
+# Builds the per-browser bundles and creates a GitHub release
 
 on:
   push:
@@ -24,11 +22,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
-      - name: Install dependencies
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
-        run: npm ci
 
       - name: Build bundles
         run: npm run build
