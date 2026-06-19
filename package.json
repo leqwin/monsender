@@ -1,0 +1,33 @@
+{
+  "name": "Monloader browser extension",
+  "version": "1.0.0",
+  "description": "Send the current page or its images to your monloader download queue.",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build": "node build.js",
+    "build:chrome": "node build.js chrome",
+    "build:firefox": "node build.js firefox",
+    "icons": "node tools/gen-icons.js",
+    "clean": "rm -rf dist",
+    "lint": "npx --yes web-ext lint --source-dir dist/firefox --self-hosted",
+    "run:firefox": "npx --yes web-ext run --source-dir dist/firefox"
+  },
+  "keywords": [
+    "browser-extension",
+    "manifest-v3",
+    "monloader",
+    "monbooru",
+    "gallery-dl"
+  ],
+  "author": "leqwin",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leqwin/monloader-browser"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "playwright": "^1.60.0"
+  }
+}

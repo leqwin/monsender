@@ -1,0 +1,88 @@
+/* Shared palette and base styles for the popup, side panel, and options page.
+   Tokens are monloader's exactly so the surfaces
+   read as the same family: dark, monospace, terminal-flavored, indigo accent. */
+:root {
+  --bg:         #0d0d0d;
+  --bg-surface: #16161c;
+  --bg-input:   #111118;
+  --border:     #2a2a36;
+  --fg:         #c8c8c8;
+  --fg-dim:     #6a6a82;
+  --accent:     #5c6bc0;
+  --success:    #22aa44;
+  --warning:    #ffaa00;
+  --error:      #cc3333;
+  --cat-general:   #3d90e3;
+  --cat-character: #00aa00;
+  --cat-artist:    #cc0000;
+  --cat-copyright: #aa00aa;
+  --cat-meta:      #ffaa00;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "JetBrains Mono", "Fira Mono", "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button, input, select, textarea {
+  font-family: inherit; font-size: inherit;
+  background: var(--bg-input); color: var(--fg);
+  border: 1px solid var(--border); border-radius: 0; padding: 4px 8px;
+}
+button { cursor: pointer; background: var(--bg-surface); }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { cursor: not-allowed; color: var(--fg-dim); }
+/* Primary action (send) filled with monloader's indigo. */
+.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.primary:hover:not(:disabled) { filter: brightness(1.12); }
+.primary:disabled { background: var(--bg-surface); border-color: var(--border); }
+input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+
+.muted { color: var(--fg-dim); }
+.small { font-size: 12px; }
+.nowrap { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Status (job) and outcome (item) colors - same vocabulary as monloader. */
+.st-queued, .st-running, .o-queued, .tone-accent { color: var(--accent); }
+.st-succeeded, .o-created, .tone-success { color: var(--success); }
+.st-partial, .o-capped, .tone-warning { color: var(--warning); }
+.st-failed, .o-failed, .tone-error { color: var(--error); }
+.st-canceled, .o-duplicate, .o-skipped_archive, .o-skipped, .o-canceled, .tone-dim { color: var(--fg-dim); }
+
+.flash { padding: 4px 8px; margin: 6px 0; border: 1px solid; font-size: 13px; }
+.flash-ok { color: var(--success); border-color: var(--success); }
+.flash-err { color: var(--error); border-color: var(--error); }
+.flash-warn { color: var(--warning); border-color: var(--warning); }
+
+.badge { padding: 0 4px; border: 1px solid var(--border); font-size: 11px; }
+
+.conn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-dim); }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.dot-ok { background: var(--success); }
+.dot-checking, .dot-rejected { background: var(--warning); }
+.dot-down { background: var(--error); }
+
+/* Settings sections. */
+.section { border: 1px solid var(--border); padding: 12px; margin-bottom: 16px; }
+.section h2 {
+  font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--accent); margin-bottom: 10px;
+  border-bottom: 1px solid var(--border); padding-bottom: 4px;
+}
+.field { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.field label { width: 150px; flex-shrink: 0; color: var(--fg-dim); }
+.field input[type=text], .field input[type=password], .field input[type=number], .field select {
+  flex: 1; min-width: 0; max-width: 420px;
+}
+.field .hint { flex-basis: 100%; color: var(--fg-dim); font-size: 11px; padding-left: 158px; }
+.actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; }
+.actions .conn { margin-right: auto; }
+.logo { height: 18px; width: auto; vertical-align: middle; }

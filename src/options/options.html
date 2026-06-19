@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>monloader settings</title>
+  <link rel="stylesheet" href="../lib/ui.css" />
+  <style>
+    body { max-width: 680px; margin: 0 auto; padding: 16px; }
+    header { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+    header strong { letter-spacing: 1px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="../assets/icon48.png" class="logo" alt="" />
+    <strong>monloader</strong><span class="muted small">settings</span>
+  </header>
+
+  <div class="section">
+    <h2>monloader</h2>
+    <div class="field">
+      <label for="baseUrl">URL</label>
+      <input id="baseUrl" type="text" placeholder="http://localhost:8081" autocomplete="off" spellcheck="false" />
+    </div>
+    <div class="field">
+      <label for="token">API token</label>
+      <input id="token" type="password" placeholder="(not set)" autocomplete="off" />
+    </div>
+    <div class="actions">
+      <span id="conn" class="conn"></span>
+      <button id="test" type="button">test connection</button>
+      <button id="save" type="button">save</button>
+    </div>
+    <div id="flash"></div>
+  </div>
+
+  <div class="section">
+    <h2>sending</h2>
+    <div class="field">
+      <label for="wait">wait (seconds)</label>
+      <input id="wait" type="number" min="0" max="60" value="20" />
+      <span class="hint">how long a single send waits for the result before it falls back to the queue.</span>
+    </div>
+    <div class="field">
+      <label for="scanCap">scan cap</label>
+      <input id="scanCap" type="number" min="1" max="1000" value="100" />
+      <span class="hint">max images listed / sent per page scan.</span>
+    </div>
+    <div class="field">
+      <label for="minSize">min image size</label>
+      <input id="minSize" type="number" min="0" max="4000" value="64" />
+      <span class="hint">skip images smaller than this many pixels in either dimension (icons, trackers). 0 = no filter.</span>
+    </div>
+    <div class="field">
+      <label for="previews">previews</label>
+      <input id="previews" type="checkbox" checked />
+      <span class="hint">show thumbnails in the chooser. off = no thumbnails, no remote image loads.</span>
+    </div>
+  </div>
+
+  <script src="../vendor/browser-polyfill.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="../lib/perms.js"></script>
+  <script src="../lib/api.js"></script>
+  <script src="../lib/outcome.js"></script>
+  <script src="../lib/urls.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+name: Release
+
+# Runs on the GitHub mirror when the mirror workflow pushes a vX.Y.Z tag.
+# Builds the per-browser bundles and creates a GitHub release with the
+# Chrome .zip and Firefox .xpi attached, plus the latest changelog entry.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+        run: npm ci
+
+      - name: Build bundles
+        run: npm run build
+
+      - name: Extract changelog entry
+        run: |
+          awk '/^## /{if(found){exit} found=1; next} found' CHANGELOG.md > .latest_changelog.md
+          if [ ! -s .latest_changelog.md ]; then
+            echo "No changelog entry found under a '## ' heading." >&2
+            exit 1
+          fi
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: .latest_changelog.md
+          files: |
+            dist/monloader-browser-chrome-*.zip
+            dist/monloader-browser-firefox-*.xpi

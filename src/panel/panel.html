@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="referrer" content="no-referrer" />
+  <title>monloader</title>
+  <link rel="stylesheet" href="../lib/ui.css" />
+  <link rel="stylesheet" href="panel.css" />
+</head>
+<body>
+  <header>
+    <div class="brand" id="brand" role="button" tabindex="0" title="open the monloader queue"><img src="../assets/icon48.png" class="logo" alt="" /><strong>monloader</strong></div>
+    <span id="conn" class="conn"></span>
+  </header>
+
+  <section id="chooser">
+    <div class="targetrow" id="scanurl" hidden>
+      <span class="prompt">&gt;</span>
+      <span class="target nowrap" id="scanUrl"></span>
+    </div>
+    <div class="bar">
+      <span id="scanhead" class="muted small">scan</span>
+      <span class="selacts small">
+        <span id="selAll" class="sact" role="button" tabindex="0">[all]</span>
+        <span id="selNone" class="sact" role="button" tabindex="0">[none]</span>
+      </span>
+    </div>
+    <div id="grid" class="grid"></div>
+    <div class="sendbar">
+      <button id="sendSel" class="primary" type="button" disabled>send selected (0)</button>
+      <span id="scanmsg" class="small muted"></span>
+    </div>
+  </section>
+
+  <script src="../vendor/browser-polyfill.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="../lib/api.js"></script>
+  <script src="../lib/outcome.js"></script>
+  <script src="../lib/render.js"></script>
+  <script src="panel.js"></script>
+</body>
+</html>

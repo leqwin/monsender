@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "monloader",
+  "version": "1.0.0",
+  "description": "Send the current page or its images to your monloader download queue.",
+  "permissions": ["activeTab", "scripting", "storage", "contextMenus"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "action": {
+    "default_title": "Send to monloader",
+    "default_popup": "popup/popup.html",
+    "default_icon": { "16": "assets/icon16.png", "48": "assets/icon48.png", "128": "assets/icon128.png" }
+  },
+  "options_ui": { "page": "options/options.html", "open_in_tab": false },
+  "commands": {
+    "send-page": {
+      "suggested_key": { "default": "Ctrl+Shift+L" },
+      "description": "Send the current page to monloader"
+    }
+  },
+  "icons": { "16": "assets/icon16.png", "48": "assets/icon48.png", "128": "assets/icon128.png" },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; img-src 'self' https: http: data:"
+  }
+}

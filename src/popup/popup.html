@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>monloader</title>
+  <link rel="stylesheet" href="../lib/ui.css" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <div class="brand" id="brand" role="button" tabindex="0" title="open the monloader queue"><img src="../assets/icon48.png" class="logo" alt="" /><strong>monloader</strong></div>
+    <span id="conn" class="conn"></span>
+  </header>
+
+  <div id="target">
+    <div class="targetrow">
+      <span class="prompt">&gt;</span>
+      <span class="target nowrap" id="targetUrl">...</span>
+    </div>
+    <div class="hint small muted" id="hint"></div>
+  </div>
+
+  <div class="row">
+    <button id="send" class="primary" type="button">send page</button>
+    <button id="scan" type="button">scan page</button>
+    <button id="options" type="button">options</button>
+  </div>
+
+  <div id="result" class="result"></div>
+
+  <div class="recent">
+    <div class="recent-head muted small">
+      <span>recent</span>
+      <span id="clearQueue" class="qact" role="button" tabindex="0" title="clear finished jobs">[clear]</span>
+    </div>
+    <div id="queue"></div>
+  </div>
+
+  <script src="../vendor/browser-polyfill.js"></script>
+  <script src="../lib/storage.js"></script>
+  <script src="../lib/api.js"></script>
+  <script src="../lib/outcome.js"></script>
+  <script src="../lib/urls.js"></script>
+  <script src="../lib/sites.js"></script>
+  <script src="../lib/send.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
