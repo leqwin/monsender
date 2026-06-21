@@ -45,7 +45,7 @@ function buildManifest(target, version) {
     m.background = { scripts: BG_SCRIPTS };
     m.sidebar_action = {
       default_panel: 'panel/panel.html',
-      default_title: 'monloader',
+      default_title: 'monsender',
       default_icon: m.icons,
       // Do not pop the sidebar open on load; it opens only when the user scans
       // (Firefox defaults open_at_install to true).
@@ -56,7 +56,7 @@ function buildManifest(target, version) {
       // data_collection_permissions key (we declare no collection - PRIVACY.md)
       // needs >=140. web-ext lint is the source of these floors.
       gecko: {
-        id: 'monloader-browser@leqwin',
+        id: 'monsender@leqwin',
         strict_min_version: '140.0',
         data_collection_permissions: { required: ['none'], optional: [] }
       }
@@ -92,7 +92,7 @@ if (require.main === module) {
   for (const t of targets) {
     const dest = build(t, version);
     const ext = t === 'firefox' ? 'xpi' : 'zip';
-    const out = path.join(DIST, `monloader-browser-${t}-v${version}.${ext}`);
+    const out = path.join(DIST, `monsender-${t}-v${version}.${ext}`);
     const info = zipDir(dest, out);
     console.log(`built ${t} v${version} -> ${path.relative(ROOT, dest)} (${info.files} files, ${path.relative(ROOT, out)})`);
   }

@@ -1,4 +1,4 @@
-# monloader-browser
+# monsender
 
 A small firefox or chrome extension for [monloader](https://github.com/leqwin/monloader). 
 It sends the page you are looking at, a right-clicked image or video, or images you pick from a page scan to your monloader download queue, which pushes them into monbooru.
@@ -36,7 +36,7 @@ npm run build        # writes dist/chrome and dist/firefox
 
 ## Attribution and license
 
-monloader-browser is licensed under **AGPL-3.0-or-later** (see `LICENSE`).
+monsender is licensed under **AGPL-3.0-or-later** (see `LICENSE`).
 
 The in-page image detection uses code from [ushiro](https://github.com/gary-host-laptop/ushiro) by
 **gary-host-laptop**, and [behind!](https://github.com/kubuzetto/behind) by **kubuzetto**, originally

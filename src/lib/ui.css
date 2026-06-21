@@ -85,4 +85,6 @@ input:focus, select:focus, textarea:focus { outline: 1px solid var(--accent); bo
 .field .hint { flex-basis: 100%; color: var(--fg-dim); font-size: 11px; padding-left: 158px; }
 .actions { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 10px; }
 .actions .conn { margin-right: auto; }
-.logo { height: 18px; width: auto; vertical-align: middle; }
+/* Brand logo mirrors monloader's topbar logo; the wordmark treatment (caps,
+   bold, letter-spacing) lives with each surface's brand header. */
+.logo { height: 40px; width: auto; flex-shrink: 0; }

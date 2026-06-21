@@ -55,6 +55,20 @@
     cb.setAttribute('data-url', item.url);
     cb.value = item.url;
 
+    // Dimensions start from the scanned size, then correct to the preview's own
+    // size once it loads, since a src/srcset variant can differ from the
+    // rendered image the scan measured.
+    const ext = fileExt(item.url);
+    let dim = null;
+    function showDims(w, h) {
+      const bits = [];
+      if (w && h) bits.push(w + '×' + h);
+      if (ext) bits.push(ext);
+      if (!bits.length) return;
+      if (!dim) { dim = doc.createElement('div'); dim.className = 'dim'; label.appendChild(dim); }
+      dim.textContent = bits.join(' · ');
+    }
+
     const thumb = doc.createElement('div');
     thumb.className = 'thumb';
     if (opts.previews) {
@@ -67,6 +81,7 @@
         media.setAttribute('loading', 'lazy');
         media.setAttribute('referrerpolicy', 'no-referrer');
         media.setAttribute('alt', '');
+        media.addEventListener('load', () => showDims(media.naturalWidth, media.naturalHeight));
       }
       // A hotlink-protected, stale, or undecodable URL leaves a blank tile; fall
       // back to the file name (textContent, so the scanned value stays text).
@@ -86,16 +101,7 @@
     label.appendChild(cb);
     label.appendChild(thumb);
     label.appendChild(meta);
-    const bits = [];
-    if (item.w && item.h) bits.push(item.w + '×' + item.h);
-    const ext = fileExt(item.url);
-    if (ext) bits.push(ext);
-    if (bits.length) {
-      const dim = doc.createElement('div');
-      dim.className = 'dim';
-      dim.textContent = bits.join(' · ');
-      label.appendChild(dim);
-    }
+    showDims(item.w, item.h);
     card.appendChild(label);
     return card;
   }

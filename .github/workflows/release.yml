@@ -41,5 +41,5 @@ jobs:
           name: ${{ github.ref_name }}
           body_path: .latest_changelog.md
           files: |
-            dist/monloader-browser-chrome-*.zip
-            dist/monloader-browser-firefox-*.xpi
+            dist/monsender-chrome-*.zip
+            dist/monsender-firefox-*.xpi

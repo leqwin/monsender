@@ -12,16 +12,23 @@
   // scripting.executeScript; finalize is pure and runs in the caller). The
   // injection model is load-bearing: no standing content script.
 
-  function pickSrcset(srcset) {
-    const cands = String(srcset).split(',').map((s) => {
+  // srcset candidates as { url, w } (w is the Nw descriptor, 0 if none).
+  function srcsetCands(srcset) {
+    return String(srcset).split(',').map((s) => {
       const p = s.trim().split(/\s+/);
-      const url = p[0];
-      const m = /^([\d.]+)([wx])$/.exec(p[1] || '');
-      return { url, val: m ? parseFloat(m[1]) : 1 };
+      const m = /^(\d+)w$/.exec(p[1] || '');
+      return { url: p[0], w: m ? +m[1] : 0 };
     }).filter((c) => c.url);
-    if (!cands.length) return null;
-    cands.sort((a, b) => b.val - a.val);
-    return cands[0].url;
+  }
+
+  // The largest variant the element offers: a srcset entry wider than the
+  // rendered image, else the full src, else what the browser loaded.
+  function bestUrl(n) {
+    let best = null, bv = n.naturalWidth || 0;
+    if (n.srcset) for (const c of srcsetCands(n.srcset)) {
+      if (c.w > bv) { bv = c.w; best = c.url; }
+    }
+    return best || n.src || n.currentSrc;
   }
 
   // A pathological page can hold an enormous DOM; cap how many elements the
@@ -62,10 +69,10 @@
     function visit(n) {
       const nn = n.nodeName && n.nodeName.toUpperCase();
       if (nn === 'IMG' || nn === 'SOURCE' || nn === 'VIDEO' || nn === 'PICTURE') {
-        // One URL per element - prefer what the browser actually loaded
-        // (currentSrc), then src, then a srcset candidate. A srcset can carry a
-        // decoy/low-res entry the browser ignored, so it is the last resort.
-        add(n.currentSrc || n.src || (n.srcset && pickSrcset(n.srcset)), false, nn,
+        // One URL per element: the largest variant it advertises. The browser
+        // renders a downscaled srcset entry, but the full image may be there or
+        // in src - bestUrl resolves it.
+        add(bestUrl(n), false, nn,
           n.naturalWidth || n.videoWidth || n.width, n.naturalHeight || n.videoHeight || n.height);
         if (n.poster) add(n.poster, false, 'IMG');
       } else if (nn === 'SVG') {
@@ -130,5 +137,5 @@
     return { items, total: all.length, shown: items.length, truncated: all.length > cap };
   }
 
-  return { pickSrcset, collect, classify, finalize };
+  return { collect, classify, finalize };
 });

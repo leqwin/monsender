@@ -1,6 +1,6 @@
 # Privacy policy
 
-monloader-browser collects nothing and sends nothing to anyone except the
+monsender collects nothing and sends nothing to anyone except the
 monloader server you configure.
 
 - No analytics, no telemetry, no remote code. All code ships in the extension

@@ -175,7 +175,14 @@
         a.appendChild(qact('continue', 'fetch the next items past the cap', () => act(api.continueJob(cfg, j.id))));
         a.appendChild(qact('fetch all', 'keep fetching until the search runs out', () => act(api.continueAll(cfg, j.id))));
       }
-      a.appendChild(qact('retry', 'requeue, keeping the gallery-dl archive', () => act(api.retry(cfg, j.id, false))));
+      if (j.status !== 'succeeded') {
+        a.appendChild(qact('retry', 'requeue, keeping the gallery-dl archive', () => act(api.retry(cfg, j.id, false))));
+      }
+      // A plain retry keeps the archive, so a skipped-archive item only
+      // re-downloads when forced.
+      if (j.summary && j.summary.skipped > 0) {
+        a.appendChild(qact('force download', 're-download, ignoring the gallery-dl archive', () => act(api.retry(cfg, j.id, true))));
+      }
     }
     return a;
   }

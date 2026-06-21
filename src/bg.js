@@ -138,8 +138,41 @@ async function resolveMenuTarget(cfg, info) {
   return info.srcUrl;
 }
 
-browser.contextMenus.onClicked.addListener(async (info) => {
+// The context menu exposes only the rendered srcUrl, so a responsive image
+// yields its downscaled variant. Look up the clicked image's largest srcset
+// candidate in the page, under the gesture's activeTab grant; fall back to the
+// rendered URL on any miss.
+async function largestForSrc(tabId, frameId, srcUrl) {
+  try {
+    const [res] = await browser.scripting.executeScript({
+      target: frameId != null ? { tabId, frameIds: [frameId] } : { tabId },
+      args: [srcUrl],
+      func: (target) => {
+        const abs = (u) => { try { return new URL(u, document.baseURI).href; } catch (e) { return null; } };
+        for (const img of document.querySelectorAll('img')) {
+          if (img.currentSrc !== target && img.src !== target) continue;
+          // a srcset entry wider than the displayed image, else the full src
+          let best = null, bv = img.naturalWidth || 0;
+          for (const part of (img.srcset || '').split(',')) {
+            const seg = part.trim().split(/\s+/);
+            const m = /^(\d+)w$/.exec(seg[1] || '');
+            if (seg[0] && m && +m[1] > bv) { bv = +m[1]; best = seg[0]; }
+          }
+          const pick = best || img.src;
+          return pick ? abs(pick) : null;
+        }
+        return null;
+      }
+    });
+    const up = res && res.result;
+    return (typeof up === 'string' && /^https?:/i.test(up)) ? up : srcUrl;
+  } catch (e) { return srcUrl; }
+}
+
+browser.contextMenus.onClicked.addListener(async (info, tab) => {
   if (info.menuItemId !== MENU.send) return;
   const s = await ML.storage.getSettings();
-  await sendUrl(await resolveMenuTarget({ baseUrl: s.baseUrl, token: s.token }, info));
+  let target = await resolveMenuTarget({ baseUrl: s.baseUrl, token: s.token }, info);
+  if (s.baseUrl && tab && target === info.srcUrl) target = await largestForSrc(tab.id, info.frameId, info.srcUrl);
+  await sendUrl(target);
 });

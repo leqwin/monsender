@@ -1,1 +1,1 @@
-https://github.com/leqwin/monloader-browser
+https://github.com/leqwin/monsender
