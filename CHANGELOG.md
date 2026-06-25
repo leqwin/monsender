@@ -1,5 +1,11 @@
 # Changelog
 
+## [v1.1.0] - 2026-06-25
+### Added
+- Scan chooser shows each image's resolutions as inline tokens.
+### Changed
+- A blocked image preview now shows a "preview blocked" note instead of a blank tile.
+
 ## [v1.0.1] - 2026-06-21
 ### Added
 - Force re-download for skipped-archive jobs, which plain retry would re-skip.

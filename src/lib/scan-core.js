@@ -31,6 +31,15 @@
     return best || n.src || n.currentSrc;
   }
 
+  // Every distinct resolution the element advertises (srcset entries + src), so
+  // the chooser can offer a smaller one. The largest stays the default (bestUrl).
+  function variantsOf(n) {
+    const cands = n.srcset ? srcsetCands(n.srcset) : [];
+    if (n.src) cands.push({ url: n.src, w: 0 });
+    if (n.currentSrc && n.currentSrc !== n.src) cands.push({ url: n.currentSrc, w: 0 });
+    return cands;
+  }
+
   // A pathological page can hold an enormous DOM; cap how many elements the
   // walk visits so the per-element getComputedStyle cannot stall the page. The
   // bound is far above any real gallery.
@@ -45,16 +54,30 @@
     const seen = new Set();
     const baseURI = doc.baseURI;
 
-    function add(raw, isData, tag, w, h) {
-      if (!raw) return;
-      let t = String(raw).trim();
-      if (!t || t.startsWith('blob:')) return;
-      if (!isData && !t.startsWith('data:')) {
-        try { t = new win.URL(t, baseURI).href; } catch (e) { return; }
-      }
-      if (seen.has(t)) return;
+    function toAbs(raw, isData) {
+      if (!raw) return null;
+      const t = String(raw).trim();
+      if (!t || t.startsWith('blob:')) return null;
+      if (isData || t.startsWith('data:')) return t;
+      try { return new win.URL(t, baseURI).href; } catch (e) { return null; }
+    }
+
+    function add(raw, isData, tag, w, h, variants) {
+      const t = toAbs(raw, isData);
+      if (!t || seen.has(t)) return;
       seen.add(t);
-      out.push({ url: t, tag: tag || '', w: w || 0, h: h || 0 });
+      const item = { url: t, tag: tag || '', w: w || 0, h: h || 0 };
+      if (variants) {
+        const vs = [], vseen = new Set();
+        for (const v of variants) {
+          const u = toAbs(v.url, false);
+          if (!u || vseen.has(u)) continue;
+          vseen.add(u);
+          vs.push({ url: u, w: v.w || 0 });
+        }
+        if (vs.length > 1) item.variants = vs;
+      }
+      out.push(item);
     }
 
     function svgToURL(el) {
@@ -69,11 +92,11 @@
     function visit(n) {
       const nn = n.nodeName && n.nodeName.toUpperCase();
       if (nn === 'IMG' || nn === 'SOURCE' || nn === 'VIDEO' || nn === 'PICTURE') {
-        // One URL per element: the largest variant it advertises. The browser
-        // renders a downscaled srcset entry, but the full image may be there or
-        // in src - bestUrl resolves it.
+        // One card per element, defaulting to the largest variant; the other
+        // resolutions ride along so the chooser can offer a smaller one.
         add(bestUrl(n), false, nn,
-          n.naturalWidth || n.videoWidth || n.width, n.naturalHeight || n.videoHeight || n.height);
+          n.naturalWidth || n.videoWidth || n.width, n.naturalHeight || n.videoHeight || n.height,
+          variantsOf(n));
         if (n.poster) add(n.poster, false, 'IMG');
       } else if (nn === 'SVG') {
         add(svgToURL(n), true, 'SVG');
@@ -115,6 +138,27 @@
     return 'other';
   }
 
+  function fetchable(url) {
+    const k = classify(url);
+    return k === 'http' || k === 'video';
+  }
+
+  // The resolutions to offer for one item: fetchable, deduped, the default
+  // (largest) first then widest down. Null when there is no real choice.
+  function pickVariants(list, primary) {
+    const seen = new Set();
+    const out = [];
+    for (const v of list || []) {
+      const u = v && v.url;
+      if (!u || seen.has(u) || !fetchable(u)) continue;
+      seen.add(u);
+      out.push({ url: u, w: v.w || 0 });
+    }
+    if (out.length < 2) return null;
+    out.sort((a, b) => (a.url === primary ? -1 : b.url === primary ? 1 : b.w - a.w));
+    return out;
+  }
+
   // Dedupe, keep the http(s) image and video files monloader can fetch
   // (data: and inline svg are skipped, since they have no fetchable URL), cap.
   function finalize(raw, opts) {
@@ -131,7 +175,10 @@
       // drop icons/trackers when the size is known
       if (minSize && r.w && r.h && (r.w < minSize || r.h < minSize)) continue;
       seen.add(url);
-      all.push({ url, tag: (r && r.tag) || '', kind, w: (r && r.w) || 0, h: (r && r.h) || 0 });
+      const item = { url, tag: (r && r.tag) || '', kind, w: (r && r.w) || 0, h: (r && r.h) || 0 };
+      const variants = pickVariants(r && r.variants, url);
+      if (variants) item.variants = variants;
+      all.push(item);
     }
     const items = all.slice(0, cap);
     return { items, total: all.length, shown: items.length, truncated: all.length > cap };

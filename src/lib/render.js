@@ -39,7 +39,47 @@
     } catch (e) { return ''; }
   }
 
-  function placeholderText(item) { return fileName(item.url) || kindLabel(item.kind); }
+  // Shorten a long file name for the no-preview tile so it does not fill the
+  // card; keep the head and the extension, drop the middle.
+  function trimName(name, max) {
+    const s = String(name);
+    max = max || 28;
+    if (s.length <= max) return s;
+    const dot = s.lastIndexOf('.');
+    const ext = (dot > 0 && s.length - dot <= 6) ? s.slice(dot) : '';
+    return s.slice(0, max - ext.length - 3) + '...' + ext;
+  }
+
+  // Best-effort pixel width from a CDN URL that encodes one (.../1500x0/...,
+  // photo-1500x1000.jpg), so a variant with no srcset descriptor still shows its
+  // resolution instead of a bare "src". 0 when the URL carries no clear size.
+  function urlWidth(u) {
+    const s = String(u);
+    const m = /\/(\d{3,5})x\d{1,5}\//.exec(s) || /[-_](\d{3,5})x\d{1,5}\.[a-z]/i.exec(s);
+    return m ? +m[1] : 0;
+  }
+
+  function placeholderText(item) { return trimName(fileName(item.url)) || kindLabel(item.kind); }
+
+  // The no-preview tile: the (trimmed) file name, prefixed with a "preview
+  // blocked" note when a load failed, so a host that blocks hotlinking reads
+  // differently from previews being turned off. textContent only, so a scanned
+  // name can never become markup.
+  function fillNoPreview(doc, thumb, item, blocked) {
+    thumb.textContent = '';
+    thumb.classList.add('noimg');
+    if (blocked) {
+      thumb.classList.add('blocked');
+      const note = doc.createElement('div');
+      note.className = 'phnote';
+      note.textContent = 'preview blocked';
+      thumb.appendChild(note);
+    }
+    const name = doc.createElement('div');
+    name.className = 'phname';
+    name.textContent = placeholderText(item);
+    thumb.appendChild(name);
+  }
 
   function imageCard(doc, item, opts) {
     opts = opts || {};
@@ -58,7 +98,7 @@
     // Dimensions start from the scanned size, then correct to the preview's own
     // size once it loads, since a src/srcset variant can differ from the
     // rendered image the scan measured.
-    const ext = fileExt(item.url);
+    let ext = fileExt(item.url);
     let dim = null;
     function showDims(w, h) {
       const bits = [];
@@ -71,9 +111,17 @@
 
     const thumb = doc.createElement('div');
     thumb.className = 'thumb';
+    let media = null;
+    let activeSize = null;
+    function onLoad(w, h) {
+      showDims(w, h);
+      // The loaded width is authoritative, so a no-descriptor src stops reading
+      // "src" and shows its real resolution like the rest.
+      if (activeSize && w) activeSize.textContent = w + 'w';
+    }
     if (opts.previews) {
       const video = item.kind === 'video';
-      const media = doc.createElement(video ? 'video' : 'img');
+      media = doc.createElement(video ? 'video' : 'img');
       if (video) {
         media.muted = true;
         media.setAttribute('preload', 'metadata');
@@ -81,16 +129,15 @@
         media.setAttribute('loading', 'lazy');
         media.setAttribute('referrerpolicy', 'no-referrer');
         media.setAttribute('alt', '');
-        media.addEventListener('load', () => showDims(media.naturalWidth, media.naturalHeight));
+        media.addEventListener('load', () => onLoad(media.naturalWidth, media.naturalHeight));
       }
-      // A hotlink-protected, stale, or undecodable URL leaves a blank tile; fall
-      // back to the file name (textContent, so the scanned value stays text).
-      media.addEventListener('error', () => { thumb.classList.add('noimg'); thumb.textContent = placeholderText(item); });
+      // A hotlink-protected, stale, or undecodable URL leaves a blank tile; show
+      // it as blocked so the user sees why the preview is missing.
+      media.addEventListener('error', () => fillNoPreview(doc, thumb, item, true));
       media.setAttribute('src', item.url); // setAttribute, not innerHTML: never parsed as markup
       thumb.appendChild(media);
     } else {
-      thumb.classList.add('noimg');
-      thumb.textContent = placeholderText(item);
+      fillNoPreview(doc, thumb, item, false);
     }
 
     const meta = doc.createElement('div');
@@ -103,6 +150,42 @@
     label.appendChild(meta);
     showDims(item.w, item.h);
     card.appendChild(label);
+
+    // One clickable token per resolution, outside the label so a click never
+    // toggles the pick. Choosing one repoints the pick and reloads the preview;
+    // onLoad then labels it with the real loaded width.
+    if (item.variants && item.variants.length > 1) {
+      const sizes = doc.createElement('div');
+      sizes.className = 'sizes';
+      const tokens = item.variants.map((v) => {
+        const t = doc.createElement('span');
+        t.className = 'size';
+        t.setAttribute('data-url', v.url);
+        t.setAttribute('role', 'button');
+        t.setAttribute('tabindex', '0');
+        const w = v.w || urlWidth(v.url);
+        t.textContent = w ? w + 'w' : 'src';
+        sizes.appendChild(t);
+        return t;
+      });
+      const activate = (t) => {
+        tokens.forEach((x) => x.classList.toggle('active', x === t));
+        activeSize = t;
+        const u = t.getAttribute('data-url');
+        cb.setAttribute('data-url', u);
+        cb.value = u;
+        ext = fileExt(u);
+        if (media) media.setAttribute('src', u);
+      };
+      tokens.forEach((t) => {
+        t.addEventListener('click', () => activate(t));
+        t.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(t); } });
+      });
+      const def = tokens.find((t) => t.getAttribute('data-url') === item.url) || tokens[0];
+      def.classList.add('active');
+      activeSize = def;
+      card.appendChild(sizes);
+    }
     return card;
   }
 
