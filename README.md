@@ -5,12 +5,39 @@ It sends the page you are looking at, a right-clicked image or video, or images 
 
 ## Features
 
-- Send the current page to monloader (via toolbar or via Ctrl+Shift+L shortcut). On a supported booru the post is fetched with its tags; a direct
-  image is sent without them.
+- Send the current page to monloader (via toolbar or via Ctrl+Shift+L shortcut). 
 - Right-click an image or video and "Send to monloader".
 - Scan a page for images and pick which to send from a docked side panel.
-- Watch and manage the monloader queue: retry, force download, continue past the cap,
-  cancel, remove, clear finished.
+- Watch and manage the monloader queue
+
+## Related applications
+
+monsender is a companion browser extension for monloader. It hands the page you're viewing to monloader's download queue :
+
+```mermaid
+flowchart LR
+    web["- Any booru or gallery supported by gallery-dl<br/>- Direct image URL"]
+    sender(["<b>monsender</b><br/>browser extension"])
+    loader["<b>monloader</b><br/>downloader"]
+    booru["<b>monbooru</b><br/>Your self-hosted booru"]
+
+    web -->|browse| sender
+    sender -->|REST API| loader
+    web -.->|paste URL| loader
+    loader -->|REST API| booru
+
+    classDef hub  fill:#5c6bc0,stroke:#9fa8da,stroke-width:3px,color:#ffffff;
+    classDef tool fill:#16161c,stroke:#5c6bc0,stroke-width:1.5px,color:#c8c8c8;
+    classDef src  fill:#16161c,stroke:#8888a0,stroke-width:1px,color:#8888a0;
+
+    class sender hub;
+    class loader,booru tool;
+    class web src;
+```
+
+- **monsender** : this application; sends the URL of the page you're currently browsing to monloader.
+- **[monloader](https://github.com/leqwin/monloader)** : downloader; fetches files and per-post metadata (via gallery-dl) and pushes them into a monbooru gallery over the REST API.
+- **[monbooru](https://github.com/leqwin/monbooru)** : self-hosted booru; organizes, tags, and serves your collection.
 
 ## Permissions
 
@@ -21,7 +48,7 @@ runtime when you save settings.
 
 ## Install
 
-(#TODO : firefox and chrome store links).
+<a href="https://addons.mozilla.org/en-US/firefox/addon/monsender/"><img alt="Get the Add-on" height="48" src="https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg"></a>
 
 Open the extension's options and set your monloader URL and token.
 
