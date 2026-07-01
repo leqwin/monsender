@@ -28,12 +28,11 @@
   }
 
   const normalizeUrl = urls.normalizeUrl;
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   async function load() {
     const s = await storage.getSettings();
     $('baseUrl').value = s.baseUrl;
-    $('token').value = '';
-    $('token').placeholder = s.token ? '(set - leave blank to keep)' : '(not set)';
     $('wait').value = s.waitSeconds;
     $('scanCap').value = s.scanCap;
     $('minSize').value = s.minImageSize;
@@ -48,8 +47,6 @@
       minImageSize: clampInt($('minSize').value, 0, 4000, 64),
       previews: $('previews').checked
     };
-    const token = $('token').value;
-    if (token) patch.token = token; // keep existing unless a new one is typed
     return patch;
   }
 
@@ -57,7 +54,7 @@
     const s = await storage.getSettings();
     return {
       baseUrl: normalizeUrl($('baseUrl').value) || s.baseUrl,
-      token: $('token').value || s.token
+      token: s.token
     };
   }
 
@@ -77,14 +74,58 @@
 
     const patch = readForm();
     patch.baseUrl = url;
+    // A token is bound to the instance that issued it; a changed URL drops the
+    // stored token so the old key is never sent to a different monloader.
+    const urlChanged = !!(lastSavedUrl && lastSavedUrl !== url);
+    if (urlChanged) {
+      const cur = await storage.getSettings();
+      if (cur.token) patch.token = '';
+    }
     const saved = await storage.setSettings(patch);
     lastSavedUrl = saved.baseUrl;
-    $('token').value = '';
-    $('token').placeholder = saved.token ? '(set - leave blank to keep)' : '(not set)';
-    if (granted) setFlash('saved', 'flash-ok');
+    if (granted) setFlash(urlChanged && !saved.token ? 'saved; URL changed, cleared the stored token' : 'saved', 'flash-ok');
     // Always refresh the dot: when the grant was denied, test() short-circuits
     // to the "allow host access" state instead of leaving a stale indicator.
     test();
+  }
+
+  // connect pairs with monloader without copying keys: it requests a pairing,
+  // the operator approves in monloader, and the issued token is stored here.
+  async function connect() {
+    const url = normalizeUrl($('baseUrl').value);
+    $('baseUrl').value = url;
+    if (!url) { setFlash('set a monloader URL first', 'flash-err'); return; }
+    let granted = false;
+    try {
+      const oldUrl = lastSavedUrl && lastSavedUrl !== url ? lastSavedUrl : null;
+      granted = await perms.syncOrigin(url, oldUrl);
+    } catch (e) { granted = false; }
+    if (!granted) { setFlash('host access for ' + url + ' was not granted', 'flash-warn'); return; }
+
+    setFlash('requesting pairing...', 'flash-warn');
+    const cfg = { baseUrl: url };
+    const r = await api.pair(cfg);
+    if (!r.ok || !(r.data && r.data.request_id)) {
+      setFlash((r.data && r.data.error) || (r.networkError ? 'monloader unreachable' : 'pairing request failed'), 'flash-err');
+      return;
+    }
+    setFlash('approve the request in monloader (settings → authentication), waiting...', 'flash-warn');
+    const id = r.data.request_id;
+    for (let i = 0; i < 60; i++) {
+      await sleep(1500);
+      const st = await api.pairStatus(cfg, id);
+      if (!st.ok || !st.data) continue;
+      if (st.data.status === 'approved' && st.data.token) {
+        const saved = await storage.setSettings({ baseUrl: url, token: st.data.token });
+        lastSavedUrl = saved.baseUrl;
+        setFlash('paired with monloader', 'flash-ok');
+        test();
+        return;
+      }
+      if (st.data.status === 'denied') { setFlash('pairing was denied in monloader', 'flash-err'); return; }
+      if (st.data.status === 'expired') { setFlash('pairing request expired; try again', 'flash-err'); return; }
+    }
+    setFlash('timed out waiting for approval; try again', 'flash-err');
   }
 
   async function test() {
@@ -111,6 +152,7 @@
 
   $('save').addEventListener('click', save);
   $('test').addEventListener('click', test);
+  $('connect').addEventListener('click', connect);
 
   // Scripts are at the end of <body>, so the DOM above exists. Init now.
   load().then(test);

@@ -115,5 +115,20 @@
     return req(base(cfg) + '/api/v1/sites' + p, { headers: headers(cfg, false) });
   }
 
-  return { enqueue, enqueueBatch, listQueue, retry, continueJob, continueAll, remove, health, listSites };
+  // pair offers a pairing to monloader; the operator approves there. No token is
+  // sent (obtaining one is the point). Returns { request_id } on success.
+  async function pair(cfg) {
+    return req(base(cfg) + '/api/v1/pair/request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app: 'monsender', requested_scopes: ['read', 'write'] })
+    });
+  }
+
+  // pairStatus polls a pending request; once approved, data.token carries the
+  // issued bearer token (delivered once).
+  async function pairStatus(cfg, id) {
+    return req(base(cfg) + '/api/v1/pair/status?id=' + encodeURIComponent(id), { headers: {} });
+  }
+
+  return { enqueue, enqueueBatch, listQueue, retry, continueJob, continueAll, remove, health, listSites, pair, pairStatus };
 });

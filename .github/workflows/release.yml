@@ -24,7 +24,7 @@ jobs:
           node-version: "20"
 
       - name: Build bundles
-        run: npm run build
+        run: node build.js
 
       - name: Extract changelog entry
         run: |

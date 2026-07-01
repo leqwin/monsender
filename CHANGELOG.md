@@ -1,5 +1,16 @@
 # Changelog
 
+## [v1.2.0] - 2026-07-01
+
+This update include a breaking change with the monloader pairing mechanism. Update monloader to >v1.2.0 and use the pairing mechanism.
+
+### Added
+- One-click "connect to monloader": pair and approve in monloader's settings.
+### Changed
+- Changing the monloader URL now clears the stored token, so you re-pair for the new instance.
+### Removed
+- Manual API token field in the options page.
+
 ## [v1.1.0] - 2026-06-25
 ### Added
 - Scan chooser shows each image's resolutions as inline tokens.

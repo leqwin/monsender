@@ -22,15 +22,12 @@
       <label for="baseUrl">URL</label>
       <input id="baseUrl" type="text" placeholder="http://localhost:8081" autocomplete="off" spellcheck="false" />
     </div>
-    <div class="field">
-      <label for="token">API token</label>
-      <input id="token" type="password" placeholder="(not set)" autocomplete="off" />
-    </div>
     <div class="actions">
-      <span id="conn" class="conn"></span>
+      <button id="connect" type="button">connect to monloader</button>
       <button id="test" type="button">test connection</button>
       <button id="save" type="button">save</button>
     </div>
+    <span id="conn" class="conn"></span>
     <div id="flash"></div>
   </div>
 

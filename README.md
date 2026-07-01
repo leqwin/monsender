@@ -57,8 +57,7 @@ Open the extension's options and set your monloader URL and token.
 Build the per-browser bundles:
 
 ```
-npm install
-npm run build        # writes dist/chrome and dist/firefox
+node build.js        # writes dist/chrome and dist/firefox
 ```
 
 ## Attribution and license
